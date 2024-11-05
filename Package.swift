@@ -1,8 +1,9 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.10
 import PackageDescription
 
 let package = Package(
     name: "SwiftyJSON",
+    platforms: [.iOS(.v15)],
     products: [
         .library(name: "SwiftyJSON", targets: ["SwiftyJSON"])
     ],
@@ -14,6 +15,6 @@ let package = Package(
                 ]
                ),
         .testTarget(name: "SwiftJSONTests", dependencies: ["SwiftyJSON"])
-    ],
-    swiftLanguageVersions: [.v5]
+    ]
+//    swiftLanguageVersions: [.v5]
 )

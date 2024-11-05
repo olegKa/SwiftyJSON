@@ -102,7 +102,7 @@ public struct JSON {
 
 	 - returns: the created JSON object
 	 */
-    public init(_ object: Any) {
+    public init(_ object: Any & Sendable) {
         switch object {
         case let object as Data:
             do {
@@ -137,7 +137,7 @@ public struct JSON {
 	
 	 - returns: The created JSON
 	 */
-    fileprivate init(jsonObject: Any) {
+    fileprivate init(jsonObject: Any & Sendable) {
         object = jsonObject
     }
 
@@ -195,8 +195,8 @@ public struct JSON {
     }
 
     /// Private object
-    fileprivate var rawArray: [Any] = []
-    fileprivate var rawDictionary: [String: Any] = [:]
+    fileprivate var rawArray: [Any & Sendable] = []
+    fileprivate var rawDictionary: [String: Any & Sendable] = [:]
     fileprivate var rawString: String = ""
     fileprivate var rawNumber: NSNumber = 0
     fileprivate var rawNull: NSNull = NSNull()
@@ -209,7 +209,7 @@ public struct JSON {
     public fileprivate(set) var error: SwiftyJSONError?
 
     /// Object in JSON
-    public var object: Any {
+    public var object: Any & Sendable {
         get {
             switch type {
             case .array:      return rawArray
@@ -238,10 +238,10 @@ public struct JSON {
                 type = .null
             case Optional<Any>.none:
                 type = .null
-            case let array as [Any]:
+            case let array as [Any & Sendable]:
                 type = .array
                 rawArray = array
-            case let dictionary as [String: Any]:
+            case let dictionary as [String: Any & Sendable]:
                 type = .dictionary
                 rawDictionary = dictionary
             default:
@@ -258,13 +258,13 @@ public struct JSON {
 }
 
 /// Private method to unwarp an object recursively
-private func unwrap(_ object: Any) -> Any {
+private func unwrap(_ object: Any & Sendable) -> Any & Sendable {
     switch object {
     case let json as JSON:
         return unwrap(json.object)
-    case let array as [Any]:
+    case let array as [Any & Sendable]:
         return array.map(unwrap)
-    case let dictionary as [String: Any]:
+    case let dictionary as [String: Any & Sendable]:
         var d = dictionary
         dictionary.forEach { pair in
             d[pair.key] = unwrap(pair.value)
@@ -275,7 +275,7 @@ private func unwrap(_ object: Any) -> Any {
     }
 }
 
-public enum Index<T: Any>: Comparable {
+public enum Index<T: Any & Sendable>: Comparable {
     case array(Int)
     case dictionary(DictionaryIndex<String, T>)
     case null
@@ -299,7 +299,7 @@ public enum Index<T: Any>: Comparable {
 }
 
 public typealias JSONIndex = Index<JSON>
-public typealias JSONRawIndex = Index<Any>
+public typealias JSONRawIndex = Index<Any & Sendable>
 
 extension JSON: Swift.Collection {
 
@@ -523,15 +523,15 @@ extension JSON: Swift.ExpressibleByFloatLiteral {
 }
 
 extension JSON: Swift.ExpressibleByDictionaryLiteral {
-    public init(dictionaryLiteral elements: (String, Any)...) {
-        let dictionary = elements.reduce(into: [String: Any](), { $0[$1.0] = $1.1})
+    public init(dictionaryLiteral elements: (String, Any & Sendable)...) {
+        let dictionary = elements.reduce(into: [String: Any & Sendable](), { $0[$1.0] = $1.1})
         self.init(dictionary)
     }
 }
 
 extension JSON: Swift.ExpressibleByArrayLiteral {
 
-    public init(arrayLiteral elements: Any...) {
+    public init(arrayLiteral elements: Any & Sendable...) {
         self.init(elements)
     }
 }
@@ -540,7 +540,7 @@ extension JSON: Swift.ExpressibleByArrayLiteral {
 
 extension JSON: Swift.RawRepresentable {
 
-    public init?(rawValue: Any) {
+    public init?(rawValue: Any & Sendable) {
         if JSON(rawValue).type == .unknown {
             return nil
         } else {
@@ -548,7 +548,7 @@ extension JSON: Swift.RawRepresentable {
         }
     }
 
-    public var rawValue: Any {
+    public var rawValue: Any & Sendable {
         return object
     }
 
@@ -569,7 +569,7 @@ extension JSON: Swift.RawRepresentable {
 		}
 	}
 
-	public func rawString(_ options: [writingOptionsKeys: Any]) -> String? {
+	public func rawString(_ options: [writingOptionsKeys: Any & Sendable]) -> String? {
 		let encoding = options[.encoding] as? String.Encoding ?? String.Encoding.utf8
 		let maxObjectDepth = options[.maxObjextDepth] as? Int ?? 10
 		do {
@@ -580,7 +580,7 @@ extension JSON: Swift.RawRepresentable {
 		}
 	}
 
-	fileprivate func _rawString(_ encoding: String.Encoding = .utf8, options: [writingOptionsKeys: Any], maxObjectDepth: Int = 10) throws -> String? {
+	fileprivate func _rawString(_ encoding: String.Encoding = .utf8, options: [writingOptionsKeys: Any & Sendable], maxObjectDepth: Int = 10) throws -> String? {
         guard maxObjectDepth > 0 else { throw SwiftyJSONError.invalidJSON }
         switch type {
         case .dictionary:
@@ -591,7 +591,7 @@ extension JSON: Swift.RawRepresentable {
 					return String(data: data, encoding: encoding)
 				}
 
-				guard let dict = object as? [String: Any?] else {
+				guard let dict = object as? [String: (Any & Sendable)?] else {
 					return nil
 				}
 				let body = try dict.keys.map { key throws -> String in
@@ -625,7 +625,7 @@ extension JSON: Swift.RawRepresentable {
 					return String(data: data, encoding: encoding)
 				}
 
-                guard let array = object as? [Any?] else {
+                guard let array = object as? [(Any & Sendable)?] else {
                     return nil
                 }
                 let body = try array.map { value throws -> String in
@@ -685,7 +685,7 @@ extension JSON {
     }
 
     //Optional [Any]
-    public var arrayObject: [Any]? {
+    public var arrayObject: [Any & Sendable]? {
         get {
             switch type {
             case .array: return rawArray
@@ -722,7 +722,7 @@ extension JSON {
 
     //Optional [String : Any]
 
-    public var dictionaryObject: [String: Any]? {
+    public var dictionaryObject: [String: Any & Sendable]? {
         get {
             switch type {
             case .dictionary: return rawDictionary
