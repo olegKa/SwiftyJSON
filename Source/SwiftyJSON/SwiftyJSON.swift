@@ -102,7 +102,7 @@ public struct JSON {
 
 	 - returns: the created JSON object
 	 */
-    public init(_ object: Any & Sendable) {
+    public init(_ object: Any) {
         switch object {
         case let object as Data:
             do {
@@ -137,7 +137,7 @@ public struct JSON {
 	
 	 - returns: The created JSON
 	 */
-    fileprivate init(jsonObject: Any & Sendable) {
+    fileprivate init(jsonObject: Any) {
         object = jsonObject
     }
 
